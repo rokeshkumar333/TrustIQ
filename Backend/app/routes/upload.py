@@ -1,10 +1,11 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify,g
 import os
 import uuid
 
 from werkzeug.utils import secure_filename
 
 from app.services.upload_service import save_document_details
+from app.utils.auth_middleware import token_required
 
 upload = Blueprint("upload", __name__)
 
@@ -26,6 +27,7 @@ def allowed_file(filename):
 
 
 @upload.route("/upload", methods=["POST"])
+@token_required
 def upload_file():
 
     # Check whether file exists
@@ -68,7 +70,7 @@ def upload_file():
 
     # Save metadata into PostgreSQL
     save_document_details(
-        user_id=1,                     # Temporary (JWT integration later)
+        user_id=g.user_id,                     # Temporary (JWT integration later)
         original_filename=original_filename,
         stored_filename=stored_filename,
         file_path=filepath,

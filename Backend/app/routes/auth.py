@@ -130,7 +130,10 @@ def login():
                 "message": "Incorrect Password"
             }), 401
 
-        token = generate_token(user_email)
+        token = generate_token(
+             user_id=user_id,
+            user_email=user_email
+     )
 
         return jsonify({
 
