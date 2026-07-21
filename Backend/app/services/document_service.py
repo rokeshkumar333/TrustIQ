@@ -1,3 +1,5 @@
+import os
+
 from app.config.database import connection
 
 
@@ -5,22 +7,54 @@ def get_all_documents():
 
     cursor = connection.cursor()
 
-    query = """
-    SELECT
-        id,
-        original_filename,
-        stored_filename,
-        file_path,
-        file_type,
-        uploaded_at
-    FROM documents
-    ORDER BY uploaded_at DESC
-    """
+    cursor.execute("""
+        SELECT
+            id,
+            original_filename,
+            stored_filename,
+            file_path,
+            file_type,
+            uploaded_at
+        FROM documents
+        ORDER BY uploaded_at DESC
+    """)
 
-    cursor.execute(query)
-
-    documents = cursor.fetchall()
+    data = cursor.fetchall()
 
     cursor.close()
 
-    return documents
+    return data
+
+
+def delete_document(document_id):
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        "SELECT file_path FROM documents WHERE id=%s",
+        (document_id,)
+    )
+
+    row = cursor.fetchone()
+
+    if row is None:
+
+        cursor.close()
+
+        return False
+
+    filepath = row[0]
+
+    if os.path.exists(filepath):
+        os.remove(filepath)
+
+    cursor.execute(
+        "DELETE FROM documents WHERE id=%s",
+        (document_id,)
+    )
+
+    connection.commit()
+
+    cursor.close()
+
+    return True
