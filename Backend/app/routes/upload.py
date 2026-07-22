@@ -1,22 +1,20 @@
-from flask import Blueprint, request, jsonify,g
+from flask import Blueprint, request, jsonify, g
 import os
 import uuid
-
 from werkzeug.utils import secure_filename
 
 from app.services.upload_service import save_document_details
+from app.services.document_pipeline import process_document
 from app.utils.auth_middleware import token_required
 
 upload = Blueprint("upload", __name__)
 
-# Upload Folder
+# Upload folder
 UPLOAD_FOLDER = "uploads"
-
-# Create uploads folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Allowed Extensions
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "pdf"}
+# Allowed file types
+ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 
 
 def allowed_file(filename):
@@ -30,7 +28,7 @@ def allowed_file(filename):
 @token_required
 def upload_file():
 
-    # Check whether file exists
+    # Check file exists
     if "file" not in request.files:
         return jsonify({
             "success": False,
@@ -53,33 +51,61 @@ def upload_file():
             "message": "Only PDF, JPG, JPEG and PNG files are allowed"
         }), 400
 
-    # Original filename (safe)
+    # Secure filename
     original_filename = secure_filename(file.filename)
 
-    # Extract extension
+    # Extension
     extension = original_filename.rsplit(".", 1)[1].lower()
 
-    # Generate UUID filename
+    # UUID filename
     stored_filename = f"{uuid.uuid4()}.{extension}"
 
-    # Complete file path
-    filepath = os.path.join(UPLOAD_FOLDER, stored_filename)
+    # Save path
+    filepath = os.path.join(
+        UPLOAD_FOLDER,
+        stored_filename
+    )
 
-    # Save file
+    # Save uploaded file
     file.save(filepath)
 
-    # Save metadata into PostgreSQL
+    # Default OCR text
+    extracted_text = ""
+
+    # Process document
+    try:
+
+        if extension == "pdf":
+
+            pipeline_result = process_document(filepath)
+
+            extracted_text = pipeline_result.get(
+                "ocr_text",
+                ""
+            )
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "message": "AI Processing Failed",
+            "error": str(e)
+        }), 500
+
+    # Save metadata + OCR text
     save_document_details(
-        user_id=g.user_id,                     # Temporary (JWT integration later)
+        user_id=g.user_id,
         original_filename=original_filename,
         stored_filename=stored_filename,
         file_path=filepath,
-        file_type=extension
+        file_type=extension,
+        extracted_text=extracted_text
     )
 
     return jsonify({
         "success": True,
         "message": "File uploaded successfully",
         "original_filename": original_filename,
-        "stored_filename": stored_filename
+        "stored_filename": stored_filename,
+        "ocr_text": extracted_text
     }), 200

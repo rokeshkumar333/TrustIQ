@@ -1,5 +1,3 @@
-import os
-
 from app.config.database import connection
 
 
@@ -8,32 +6,31 @@ def save_document_details(
     original_filename,
     stored_filename,
     file_path,
-    file_type
+    file_type,
+    extracted_text=""
 ):
-
     cursor = connection.cursor()
 
-    query = """
-    INSERT INTO documents
-    (
-        user_id,
-        original_filename,
-        stored_filename,
-        file_path,
-        file_type
-    )
-    VALUES
-    (%s,%s,%s,%s,%s)
-    """
-
     cursor.execute(
-        query,
+        """
+        INSERT INTO documents
         (
             user_id,
             original_filename,
             stored_filename,
             file_path,
-            file_type
+            file_type,
+            extracted_text
+        )
+        VALUES (%s,%s,%s,%s,%s,%s)
+        """,
+        (
+            user_id,
+            original_filename,
+            stored_filename,
+            file_path,
+            file_type,
+            extracted_text
         )
     )
 
