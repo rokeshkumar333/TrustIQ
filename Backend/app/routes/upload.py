@@ -9,11 +9,9 @@ from app.utils.auth_middleware import token_required
 
 upload = Blueprint("upload", __name__)
 
-# Upload folder
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Allowed file types
 ALLOWED_EXTENSIONS = {"pdf", "png", "jpg", "jpeg"}
 
 
@@ -28,53 +26,56 @@ def allowed_file(filename):
 @token_required
 def upload_file():
 
-    # Check file exists
-    if "file" not in request.files:
-        return jsonify({
-            "success": False,
-            "message": "No file selected"
-        }), 400
-
-    file = request.files["file"]
-
-    # Check empty filename
-    if file.filename == "":
-        return jsonify({
-            "success": False,
-            "message": "Filename is empty"
-        }), 400
-
-    # Validate extension
-    if not allowed_file(file.filename):
-        return jsonify({
-            "success": False,
-            "message": "Only PDF, JPG, JPEG and PNG files are allowed"
-        }), 400
-
-    # Secure filename
-    original_filename = secure_filename(file.filename)
-
-    # Extension
-    extension = original_filename.rsplit(".", 1)[1].lower()
-
-    # UUID filename
-    stored_filename = f"{uuid.uuid4()}.{extension}"
-
-    # Save path
-    filepath = os.path.join(
-        UPLOAD_FOLDER,
-        stored_filename
-    )
-
-    # Save uploaded file
-    file.save(filepath)
-
-    # Default OCR text
-    extracted_text = ""
-
-    # Process document
     try:
 
+        # Check file exists
+        if "file" not in request.files:
+            return jsonify({
+                "success": False,
+                "message": "No file selected"
+            }), 400
+
+        file = request.files["file"]
+
+        # Empty filename
+        if file.filename == "":
+            return jsonify({
+                "success": False,
+                "message": "Filename is empty"
+            }), 400
+
+        # Validate extension
+        if not allowed_file(file.filename):
+            return jsonify({
+                "success": False,
+                "message": "Only PDF, JPG, JPEG and PNG files are allowed"
+            }), 400
+
+        # Original filename
+        original_filename = secure_filename(file.filename)
+
+        # Extension
+        extension = original_filename.rsplit(".", 1)[1].lower()
+
+        # UUID filename
+        stored_filename = f"{uuid.uuid4()}.{extension}"
+
+        # File path
+        filepath = os.path.join(
+            UPLOAD_FOLDER,
+            stored_filename
+        )
+
+        # Save uploaded file
+        file.save(filepath)
+
+        # Default values
+        extracted_text = ""
+        fields = {}
+        trust_score = 0
+        status = "Not Processed"
+
+        # Run AI Pipeline only for PDF
         if extension == "pdf":
 
             pipeline_result = process_document(filepath)
@@ -84,28 +85,56 @@ def upload_file():
                 ""
             )
 
+            fields = pipeline_result.get(
+                "fields",
+                {}
+            )
+
+            trust_score = pipeline_result.get(
+                "trust_score",
+                0
+            )
+
+            status = pipeline_result.get(
+                "status",
+                "Unknown"
+            )
+
+        # Save into PostgreSQL
+        save_document_details(
+            user_id=g.user_id,
+            original_filename=original_filename,
+            stored_filename=stored_filename,
+            file_path=filepath,
+            file_type=extension,
+            extracted_text=extracted_text
+        )
+
+        return jsonify({
+
+            "success": True,
+
+            "message": "File uploaded successfully",
+
+            "original_filename": original_filename,
+
+            "stored_filename": stored_filename,
+
+            "ocr_text": extracted_text,
+
+            "fields": fields,
+
+            "trust_score": trust_score,
+
+            "status": status
+
+        }), 200
+
     except Exception as e:
 
         return jsonify({
+
             "success": False,
-            "message": "AI Processing Failed",
             "error": str(e)
+
         }), 500
-
-    # Save metadata + OCR text
-    save_document_details(
-        user_id=g.user_id,
-        original_filename=original_filename,
-        stored_filename=stored_filename,
-        file_path=filepath,
-        file_type=extension,
-        extracted_text=extracted_text
-    )
-
-    return jsonify({
-        "success": True,
-        "message": "File uploaded successfully",
-        "original_filename": original_filename,
-        "stored_filename": stored_filename,
-        "ocr_text": extracted_text
-    }), 200
