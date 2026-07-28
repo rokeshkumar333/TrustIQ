@@ -1,14 +1,15 @@
 from flask import Blueprint, request, jsonify
 from app.config.database import connection
 from app.utils.jwt_handler import generate_token
+from app.utils.auth_middleware import token_required
 import bcrypt
 
 auth = Blueprint("auth", __name__)
 
 
-# ===============================
-# REGISTER API
-# ===============================
+# ==========================================================
+# REGISTER
+# ==========================================================
 @auth.route("/register", methods=["POST"])
 def register():
 
@@ -18,20 +19,32 @@ def register():
 
         data = request.get_json()
 
-        full_name = data["full_name"]
-        email = data["email"]
-        password = data["password"]
+        if not data:
 
-        hashed_password = bcrypt.hashpw(
-            password.encode("utf-8"),
-            bcrypt.gensalt()
-        ).decode("utf-8")
+            return jsonify({
+                "success": False,
+                "message": "No JSON data received."
+            }), 400
+
+        full_name = data.get("full_name")
+        email = data.get("email")
+        password = data.get("password")
+
+        if not full_name or not email or not password:
+
+            return jsonify({
+                "success": False,
+                "message": "All fields are required."
+            }), 400
 
         cursor = connection.cursor()
 
-        # Check Duplicate Email
         cursor.execute(
-            "SELECT * FROM users WHERE email=%s",
+            """
+            SELECT id
+            FROM users
+            WHERE email=%s
+            """,
             (email,)
         )
 
@@ -41,13 +54,28 @@ def register():
 
             return jsonify({
                 "success": False,
-                "message": "Email already registered."
+                "message": "Email already exists."
             }), 400
+
+        hashed_password = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
 
         cursor.execute(
             """
-            INSERT INTO users(full_name,email,password)
-            VALUES(%s,%s,%s)
+            INSERT INTO users
+            (
+                full_name,
+                email,
+                password
+            )
+            VALUES
+            (
+                %s,
+                %s,
+                %s
+            )
             """,
             (
                 full_name,
@@ -59,28 +87,31 @@ def register():
         connection.commit()
 
         return jsonify({
+
             "success": True,
             "message": "User Registered Successfully"
+
         }), 201
 
     except Exception as e:
 
-        connection.rollback()
+        if connection:
+            connection.rollback()
 
         return jsonify({
+
             "success": False,
             "error": str(e)
+
         }), 500
 
     finally:
 
         if cursor:
             cursor.close()
-
-
-# ===============================
-# LOGIN API
-# ===============================
+# ==========================================================
+# LOGIN
+# ==========================================================
 @auth.route("/login", methods=["POST"])
 def login():
 
@@ -90,14 +121,32 @@ def login():
 
         data = request.get_json()
 
-        email = data["email"]
-        password = data["password"]
+        if not data:
+
+            return jsonify({
+                "success": False,
+                "message": "No JSON data received."
+            }), 400
+
+        email = data.get("email")
+        password = data.get("password")
+
+        if not email or not password:
+
+            return jsonify({
+                "success": False,
+                "message": "Email and Password are required."
+            }), 400
 
         cursor = connection.cursor()
 
         cursor.execute(
             """
-            SELECT id,full_name,email,password
+            SELECT
+                id,
+                full_name,
+                email,
+                password
             FROM users
             WHERE email=%s
             """,
@@ -110,7 +159,7 @@ def login():
 
             return jsonify({
                 "success": False,
-                "message": "Email not found"
+                "message": "Email not found."
             }), 404
 
         user_id = user[0]
@@ -127,20 +176,18 @@ def login():
 
             return jsonify({
                 "success": False,
-                "message": "Incorrect Password"
+                "message": "Incorrect Password."
             }), 401
 
         token = generate_token(
-             user_id=user_id,
+            user_id=user_id,
             user_email=user_email
-     )
+        )
 
         return jsonify({
 
             "success": True,
-
             "message": "Login Successful",
-
             "token": token,
 
             "user": {
@@ -155,8 +202,6 @@ def login():
 
     except Exception as e:
 
-        connection.rollback()
-
         return jsonify({
 
             "success": False,
@@ -168,10 +213,11 @@ def login():
 
         if cursor:
             cursor.close()
-    
-from app.utils.auth_middleware import token_required
 
 
+# ==========================================================
+# PROFILE
+# ==========================================================
 @auth.route("/profile", methods=["GET"])
 @token_required
 def profile():
