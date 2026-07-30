@@ -9,9 +9,11 @@ def serialize_document_row(row):
         return None
 
     fields = {}
+    qr_verification = {}
     if len(row) > 9 and row[9]:
         try:
             fields = json.loads(row[9])
+            qr_verification = fields.pop("qr_verification", {}) if isinstance(fields, dict) else {}
         except (TypeError, ValueError):
             fields = {}
 
@@ -26,6 +28,7 @@ def serialize_document_row(row):
         "trust_score": row[7] if len(row) > 7 else 0,
         "status": row[8] if len(row) > 8 else "Not Processed",
         "fields": fields,
+        "qr_verification": qr_verification,
     }
 
 

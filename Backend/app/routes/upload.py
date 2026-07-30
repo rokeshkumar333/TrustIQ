@@ -74,6 +74,7 @@ def upload_file():
         fields = {}
         trust_score = 0
         status = "Not Processed"
+        qr_verification = {}
 
         # Run AI Pipeline only for PDF
         if extension == "pdf":
@@ -100,6 +101,11 @@ def upload_file():
                 "Unknown"
             )
 
+            qr_verification = pipeline_result.get(
+                "qr_verification",
+                {}
+            )
+
         # Save into PostgreSQL
         save_document_details(
             user_id=g.user_id,
@@ -111,6 +117,7 @@ def upload_file():
             trust_score=trust_score,
             status=status,
             fields=fields,
+            qr_verification=qr_verification,
         )
 
         return jsonify({
@@ -129,7 +136,9 @@ def upload_file():
 
             "trust_score": trust_score,
 
-            "status": status
+            "status": status,
+
+            "qr_verification": qr_verification
 
         }), 200
 

@@ -61,6 +61,24 @@ function Sidebar() {
                     📈 Analytics
                 </NavLink>
 
+                <NavLink
+                    to="/classification"
+                    className={({ isActive }) =>
+                        isActive ? "menu active" : "menu"
+                    }
+                >
+                    🧠 Classification
+                </NavLink>
+
+                <NavLink
+                    to="/qr-verification"
+                    className={({ isActive }) =>
+                        isActive ? "menu active" : "menu"
+                    }
+                >
+                    🔍 QR Verification
+                </NavLink>
+
             </nav>
 
             <button

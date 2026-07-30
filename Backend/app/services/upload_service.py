@@ -13,6 +13,7 @@ def save_document_details(
     trust_score=0,
     status="Not Processed",
     fields=None,
+    qr_verification=None,
 ):
     db = connect()
     if db is None:
@@ -20,7 +21,10 @@ def save_document_details(
 
     cursor = db.cursor()
 
-    metadata = json.dumps(fields or {}, default=str)
+    metadata = json.dumps({
+        **(fields or {}),
+        "qr_verification": qr_verification or {},
+    }, default=str)
 
     cursor.execute(
         """

@@ -114,6 +114,21 @@ function Report() {
 
                 <div className="card shadow-sm mt-4">
                     <div className="card-body">
+                        <h5 className="card-title">QR Verification</h5>
+                        <p className="mb-0">
+                            <strong>Status:</strong> {document.qr_verification?.verified ? "Verified" : "Pending"}
+                        </p>
+                        <p className="mb-0">
+                            <strong>Method:</strong> {document.qr_verification?.method || "text-pattern"}
+                        </p>
+                        <p className="mb-0">
+                            <strong>Details:</strong> {document.qr_verification?.message || "No verification details available."}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="card shadow-sm mt-4">
+                    <div className="card-body">
                         <h5 className="card-title">OCR Preview</h5>
                         <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
                             {document.ocr_text || "No OCR text available for this document."}

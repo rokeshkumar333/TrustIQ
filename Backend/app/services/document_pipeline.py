@@ -2,6 +2,7 @@ from app.ai.pdf_converter import convert_pdf_to_images
 from app.ai.ocr_engine import extract_text
 from app.ai.field_extractor import extract_fields
 from app.ai.trust_score import calculate_trust_score
+from app.services.qr_service import verify_qr
 
 
 def process_document(file_path):
@@ -37,5 +38,8 @@ def process_document(file_path):
 
     result["trust_score"] = trust["trust_score"]
     result["status"] = trust["status"]
+
+    qr_result = verify_qr(text, file_path)
+    result["qr_verification"] = qr_result
 
     return result

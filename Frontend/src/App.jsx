@@ -7,6 +7,8 @@ import Upload from "./pages/Upload";
 import Documents from "./pages/Documents";
 import Report from "./pages/Report";
 import Analytics from "./pages/Analytics";
+import Classification from "./pages/Classification";
+import QRVerification from "./pages/QRVerification";
 import NotFound from "./pages/NotFound";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -62,6 +64,24 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <Analytics />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/classification"
+                element={
+                    <ProtectedRoute>
+                        <Classification />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/qr-verification"
+                element={
+                    <ProtectedRoute>
+                        <QRVerification />
                     </ProtectedRoute>
                 }
             />

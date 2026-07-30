@@ -5,6 +5,8 @@ from pathlib import Path
 from app.routes.documents import documents
 from app.routes.dashboard import dashboard
 from app.routes.analytics import analytics
+from app.routes.classification import classification
+from app.routes.qr import qr
 
 # Load environment variables
 BASE_DIR = Path(__file__).resolve().parent
@@ -26,6 +28,8 @@ app.register_blueprint(upload)
 app.register_blueprint(documents)
 app.register_blueprint(dashboard)
 app.register_blueprint(analytics)
+app.register_blueprint(classification)
+app.register_blueprint(qr)
 
 # Home Route
 @app.route("/")
