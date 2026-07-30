@@ -107,7 +107,10 @@ def upload_file():
             stored_filename=stored_filename,
             file_path=filepath,
             file_type=extension,
-            extracted_text=extracted_text
+            extracted_text=extracted_text,
+            trust_score=trust_score,
+            status=status,
+            fields=fields,
         )
 
         return jsonify({

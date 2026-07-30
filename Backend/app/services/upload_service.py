@@ -1,4 +1,6 @@
-from app.config.database import connection
+import json
+
+from app.config.database import connect
 
 
 def save_document_details(
@@ -7,9 +9,18 @@ def save_document_details(
     stored_filename,
     file_path,
     file_type,
-    extracted_text=""
+    extracted_text="",
+    trust_score=0,
+    status="Not Processed",
+    fields=None,
 ):
-    cursor = connection.cursor()
+    db = connect()
+    if db is None:
+        return
+
+    cursor = db.cursor()
+
+    metadata = json.dumps(fields or {}, default=str)
 
     cursor.execute(
         """
@@ -20,9 +31,12 @@ def save_document_details(
             stored_filename,
             file_path,
             file_type,
-            extracted_text
+            extracted_text,
+            trust_score,
+            status,
+            metadata
         )
-        VALUES (%s,%s,%s,%s,%s,%s)
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
         """,
         (
             user_id,
@@ -30,10 +44,13 @@ def save_document_details(
             stored_filename,
             file_path,
             file_type,
-            extracted_text
+            extracted_text,
+            trust_score,
+            status,
+            metadata,
         )
     )
 
-    connection.commit()
+    db.commit()
 
     cursor.close()

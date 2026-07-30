@@ -1,11 +1,40 @@
 import os
+import json
 
-from app.config.database import connection
+from app.config.database import connect
+
+
+def serialize_document_row(row):
+    if row is None:
+        return None
+
+    fields = {}
+    if len(row) > 9 and row[9]:
+        try:
+            fields = json.loads(row[9])
+        except (TypeError, ValueError):
+            fields = {}
+
+    return {
+        "id": row[0],
+        "original_filename": row[1],
+        "stored_filename": row[2],
+        "file_path": row[3],
+        "file_type": row[4],
+        "ocr_text": row[5],
+        "uploaded_at": str(row[6]),
+        "trust_score": row[7] if len(row) > 7 else 0,
+        "status": row[8] if len(row) > 8 else "Not Processed",
+        "fields": fields,
+    }
 
 
 def get_all_documents():
+    db = connect()
+    if db is None:
+        return []
 
-    cursor = connection.cursor()
+    cursor = db.cursor()
 
     cursor.execute("""
         SELECT
@@ -15,7 +44,10 @@ def get_all_documents():
             file_path,
             file_type,
             extracted_text,
-            uploaded_at
+            uploaded_at,
+            trust_score,
+            status,
+            metadata
         FROM documents
         ORDER BY uploaded_at DESC
     """)
@@ -24,12 +56,15 @@ def get_all_documents():
 
     cursor.close()
 
-    return data
+    return [serialize_document_row(row) for row in data]
 
 
 def get_document_by_id(document_id):
+    db = connect()
+    if db is None:
+        return None
 
-    cursor = connection.cursor()
+    cursor = db.cursor()
 
     cursor.execute("""
         SELECT
@@ -39,7 +74,10 @@ def get_document_by_id(document_id):
             file_path,
             file_type,
             extracted_text,
-            uploaded_at
+            uploaded_at,
+            trust_score,
+            status,
+            metadata
         FROM documents
         WHERE id=%s
     """, (document_id,))
@@ -48,12 +86,15 @@ def get_document_by_id(document_id):
 
     cursor.close()
 
-    return data
+    return serialize_document_row(data)
 
 
 def delete_document(document_id):
+    db = connect()
+    if db is None:
+        return False
 
-    cursor = connection.cursor()
+    cursor = db.cursor()
 
     cursor.execute(
         "SELECT file_path FROM documents WHERE id=%s",
@@ -78,7 +119,7 @@ def delete_document(document_id):
         (document_id,)
     )
 
-    connection.commit()
+    db.commit()
 
     cursor.close()
 

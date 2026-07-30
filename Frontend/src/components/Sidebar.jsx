@@ -53,12 +53,12 @@ function Sidebar() {
                 </NavLink>
 
                 <NavLink
-                    to="/report/1"
+                    to="/analytics"
                     className={({ isActive }) =>
                         isActive ? "menu active" : "menu"
                     }
                 >
-                    📄 Reports
+                    📈 Analytics
                 </NavLink>
 
             </nav>

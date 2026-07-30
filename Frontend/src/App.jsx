@@ -6,6 +6,7 @@ import Dashboard from "./pages/Dashboard";
 import Upload from "./pages/Upload";
 import Documents from "./pages/Documents";
 import Report from "./pages/Report";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -52,6 +53,15 @@ function App() {
                 element={
                     <ProtectedRoute>
                         <Report />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/analytics"
+                element={
+                    <ProtectedRoute>
+                        <Analytics />
                     </ProtectedRoute>
                 }
             />

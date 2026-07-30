@@ -1,32 +1,34 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import api from "../api/api";
 
 function Dashboard() {
-    const recentDocuments = [
-        {
-            id: 1,
-            name: "Passport.pdf",
-            score: 97,
-            status: "Verified",
-        },
-        {
-            id: 2,
-            name: "Aadhaar.pdf",
-            score: 91,
-            status: "Verified",
-        },
-        {
-            id: 3,
-            name: "PAN_Card.pdf",
-            score: 82,
-            status: "Review",
-        },
-        {
-            id: 4,
-            name: "Driving_License.pdf",
-            score: 95,
-            status: "Verified",
-        },
-    ];
+    const navigate = useNavigate();
+    const [summary, setSummary] = useState({
+        total_documents: 0,
+        average_trust_score: 0,
+        suspicious_documents: 0,
+        today_uploads: 0,
+    });
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadDashboard = async () => {
+            try {
+                const response = await api.get("/dashboard");
+                setSummary(response.data.summary || {});
+                setDocuments(response.data.documents || []);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadDashboard();
+    }, []);
 
     return (
         <Layout>
@@ -46,7 +48,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-value">
-                        24
+                        {loading ? "..." : summary.total_documents}
                     </div>
                 </div>
 
@@ -56,7 +58,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-value">
-                        94%
+                        {loading ? "..." : `${summary.average_trust_score}%`}
                     </div>
                 </div>
 
@@ -66,7 +68,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-value">
-                        2
+                        {loading ? "..." : summary.suspicious_documents}
                     </div>
                 </div>
 
@@ -76,7 +78,7 @@ function Dashboard() {
                     </div>
 
                     <div className="stat-value">
-                        5
+                        {loading ? "..." : summary.today_uploads}
                     </div>
                 </div>
 
@@ -110,41 +112,39 @@ function Dashboard() {
 
                     <tbody>
 
-                        {recentDocuments.map((doc) => (
-
-                            <tr key={doc.id}>
-
-                                <td>{doc.name}</td>
-
-                                <td>{doc.score}%</td>
-
-                                <td>
-
-                                    <span
-                                        className={
-                                            doc.status === "Verified"
-                                                ? "status-good"
-                                                : "status-review"
-                                        }
-                                    >
-                                        {doc.status}
-                                    </span>
-
+                        {documents.length === 0 ? (
+                            <tr>
+                                <td colSpan="4" className="text-center">
+                                    {loading ? "Loading recent documents..." : "No documents uploaded yet."}
                                 </td>
-
-                                <td>
-
-                                    <button
-                                        className="btn-primary-custom"
-                                    >
-                                        View Report
-                                    </button>
-
-                                </td>
-
                             </tr>
-
-                        ))}
+                        ) : (
+                            documents.map((doc) => (
+                                <tr key={doc.id}>
+                                    <td>{doc.original_filename}</td>
+                                    <td>{doc.trust_score || 0}%</td>
+                                    <td>
+                                        <span
+                                            className={
+                                                doc.status === "Verified"
+                                                    ? "status-good"
+                                                    : "status-review"
+                                            }
+                                        >
+                                            {doc.status || "Not Processed"}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button
+                                            className="btn-primary-custom"
+                                            onClick={() => navigate(`/report/${doc.id}`)}
+                                        >
+                                            View Report
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
 
                     </tbody>
 

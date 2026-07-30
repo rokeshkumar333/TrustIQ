@@ -3,6 +3,8 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from pathlib import Path
 from app.routes.documents import documents
+from app.routes.dashboard import dashboard
+from app.routes.analytics import analytics
 
 # Load environment variables
 BASE_DIR = Path(__file__).resolve().parent
@@ -22,6 +24,8 @@ CORS(app)
 app.register_blueprint(auth)
 app.register_blueprint(upload)
 app.register_blueprint(documents)
+app.register_blueprint(dashboard)
+app.register_blueprint(analytics)
 
 # Home Route
 @app.route("/")
