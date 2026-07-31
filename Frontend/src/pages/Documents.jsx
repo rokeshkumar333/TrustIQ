@@ -8,49 +8,40 @@ function Documents() {
     const navigate = useNavigate();
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        loadDocuments();
-    }, []);
+    const [error, setError] = useState("");
 
     const loadDocuments = async () => {
-
         try {
-
+            setError("");
+            setLoading(true);
             const response = await documentService.getDocuments();
-
             setDocuments(response.documents || []);
-
         } catch (error) {
-
             console.error(error);
-
+            setError("Unable to load documents. Please try again.");
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
-    const handleDelete = async (id) => {
+    useEffect(() => {
+        const fetchDocuments = async () => {
+            await loadDocuments();
+        };
 
+        fetchDocuments();
+    }, []);
+
+    const handleDelete = async (id) => {
         if (!window.confirm("Delete this document?")) return;
 
         try {
-
             await documentService.deleteDocument(id);
-
-            loadDocuments();
-
+            await loadDocuments();
         } catch (error) {
-
             console.error(error);
-
-            alert("Unable to delete document");
-
+            setError("Unable to delete document. Please try again.");
         }
-
     };
 
     return (
@@ -67,19 +58,33 @@ function Documents() {
 
             <div className="table-container">
 
-                {
+                {error && (
+                    <div className="alert alert-danger" role="alert">
+                        {error}
+                    </div>
+                )}
 
-                    loading ?
+                <div className="mb-3 d-flex justify-content-between align-items-center">
+                    <div>
+                        {loading ? (
+                            <span>Loading documents...</span>
+                        ) : (
+                            <span>{documents.length} documents loaded</span>
+                        )}
+                    </div>
+                    <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={loadDocuments}
+                        disabled={loading}
+                    >
+                        Refresh
+                    </button>
+                </div>
 
-                    (
-
-                        <h4>Loading...</h4>
-
-                    ) :
-
-                    (
-
-                        <table className="table table-striped table-bordered">
+                {loading ? (
+                    <h4>Loading...</h4>
+                ) : (
+                    <table className="table table-striped table-bordered">
 
                             <thead>
 

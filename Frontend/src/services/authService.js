@@ -1,5 +1,5 @@
 import api from "../api/api";
-import { saveToken, removeToken } from "../utils/auth";
+import { saveToken } from "../utils/auth";
 
 const authService = {
 

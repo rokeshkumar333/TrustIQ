@@ -4,7 +4,6 @@ import uuid
 from werkzeug.utils import secure_filename
 
 from app.services.upload_service import save_document_details
-from app.services.document_pipeline import process_document
 from app.utils.auth_middleware import token_required
 
 upload = Blueprint("upload", __name__)
@@ -78,6 +77,7 @@ def upload_file():
 
         # Run AI Pipeline only for PDF
         if extension == "pdf":
+            from app.services.document_pipeline import process_document
 
             pipeline_result = process_document(filepath)
 

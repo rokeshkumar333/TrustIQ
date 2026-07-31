@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def build_dashboard_summary(documents):
@@ -15,7 +15,7 @@ def build_dashboard_summary(documents):
     )
 
     today_uploads = 0
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     for doc in documents:
         uploaded_at = doc.get("uploaded_at")
         if not uploaded_at:

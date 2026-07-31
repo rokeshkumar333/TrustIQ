@@ -1,14 +1,18 @@
 import unittest
+from datetime import datetime, timedelta
 
 from app.services.dashboard_service import build_dashboard_summary
 
 
 class DashboardServiceTests(unittest.TestCase):
     def test_build_dashboard_summary_aggregates_documents(self):
+        today = datetime.utcnow().date()
+        yesterday = today - timedelta(days=1)
+
         documents = [
-            {"trust_score": 95, "status": "Verified", "uploaded_at": "2026-07-30 10:00:00"},
-            {"trust_score": 82, "status": "Needs Manual Review", "uploaded_at": "2026-07-30 11:00:00"},
-            {"trust_score": 60, "status": "Rejected", "uploaded_at": "2026-07-29 09:00:00"},
+            {"trust_score": 95, "status": "Verified", "uploaded_at": f"{today} 10:00:00"},
+            {"trust_score": 82, "status": "Needs Manual Review", "uploaded_at": f"{today} 11:00:00"},
+            {"trust_score": 60, "status": "Rejected", "uploaded_at": f"{yesterday} 09:00:00"},
         ]
 
         summary = build_dashboard_summary(documents)
