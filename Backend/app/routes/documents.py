@@ -38,6 +38,30 @@ def document_details(document_id):
     })
 
 
+@documents.route("/reports/<int:report_id>", methods=["GET"])
+@token_required
+def report_details(report_id):
+    try:
+        row = get_document_by_id(report_id)
+    except Exception as exc:
+        return jsonify({
+            "success": False,
+            "message": "Unable to retrieve report",
+            "error": str(exc)
+        }), 500
+
+    if row is None:
+        return jsonify({
+            "success": False,
+            "message": "Report not found"
+        }), 404
+
+    return jsonify({
+        "success": True,
+        "report": row
+    })
+
+
 @documents.route("/documents/<int:document_id>", methods=["DELETE"])
 @token_required
 def remove_document(document_id):
