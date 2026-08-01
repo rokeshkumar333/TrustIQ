@@ -139,6 +139,35 @@ def calculate_ai_trust_score(report):
         integrity_penalty += 4
 
     integrity_score = round(max(0, 25 - integrity_penalty), 2)
+
+    forgery_analysis = (report.get("image_forgery_analysis") or {})
+    forgery_score = 20
+    forgery_impact = "positive"
+    forgery_reason = "Image forgery analysis did not flag suspicious manipulation."
+    if forgery_analysis.get("manipulated"):
+        forgery_score = 0
+        forgery_impact = "negative"
+        forgery_reason = "Image forgery analysis detected strong manipulation evidence."
+        _add_unique(negatives, "Image forgery analysis detected manipulation")
+        _add_unique(reasons, "Potential image manipulation reduced trust")
+    elif forgery_analysis.get("manipulation_score", 0) >= 35:
+        forgery_score = 8
+        forgery_impact = "negative"
+        forgery_reason = "The image contains suspicious forensic indicators."
+        _add_unique(negatives, "Image forgery analysis flagged suspicious regions")
+        _add_unique(reasons, "Forensic indicators suggested possible tampering")
+    else:
+        _add_unique(positives, "Image forgery analysis found no suspicious manipulation")
+        _add_unique(reasons, "Image forgery checks remained consistent")
+
+    breakdown.append({
+        "module": "Image Forgery",
+        "score": round(forgery_score, 2),
+        "max_score": 20,
+        "impact": forgery_impact,
+        "reason": forgery_reason,
+        "confidence": round(float(forgery_analysis.get("confidence", 0) or 0), 2),
+    })
     if integrity_penalty == 0:
         _add_unique(positives, "Document integrity appears consistent")
         _add_unique(reasons, "Integrity checks remained stable")

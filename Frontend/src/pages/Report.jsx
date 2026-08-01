@@ -34,6 +34,7 @@ function Report() {
     const summary = useMemo(() => report?.report_summary || null, [report]);
     const trustEngine = useMemo(() => report?.trust_score_engine || null, [report]);
     const fraudEngine = useMemo(() => report?.fraud_detection_engine || null, [report]);
+    const imageForgery = useMemo(() => report?.image_forgery_analysis || null, [report]);
 
     const scoreClass = useMemo(() => {
         if (!summary) return "";
@@ -362,6 +363,49 @@ function Report() {
                                 <div className="col-md-6"><strong>Hash Algorithm</strong><div>{report?.signature_verification?.hash_algorithm || "Not available"}</div></div>
                                 <div className="col-md-6"><strong>Number of Signatures</strong><div>{report?.signature_verification?.signature_count ?? 0}</div></div>
                                 <div className="col-md-12"><strong>Verification Message</strong><div>{report?.signature_verification?.verification_message || "No message available."}</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card shadow-sm border-0 mt-4">
+                        <div className="card-body">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="card-title mb-0">Image Forgery Analysis</h5>
+                                <span className={`badge bg-${imageForgery?.manipulated ? "danger" : imageForgery?.manipulation_score >= 35 ? "warning" : "success"}`}>
+                                    {imageForgery?.manipulated ? "Manipulated" : imageForgery?.manipulation_score >= 35 ? "Suspicious" : "Safe"}
+                                </span>
+                            </div>
+                            <div className="row align-items-center">
+                                <div className="col-md-4 text-center py-3">
+                                    <div className={`display-6 fw-bold ${imageForgery?.manipulated ? "text-danger" : imageForgery?.manipulation_score >= 35 ? "text-warning" : "text-success"}`}>
+                                        {Math.round(imageForgery?.manipulation_score || 0)}
+                                    </div>
+                                    <div className="text-muted">Manipulation Score</div>
+                                </div>
+                                <div className="col-md-8">
+                                    <div className="progress" style={{ height: "10px" }}>
+                                        <div className={`progress-bar ${imageForgery?.manipulated ? "bg-danger" : imageForgery?.manipulation_score >= 35 ? "bg-warning" : "bg-success"}`} style={{ width: `${imageForgery?.manipulation_score || 0}%` }} />
+                                    </div>
+                                    <div className="mt-2 text-muted">Confidence: {imageForgery?.confidence ?? "-"}</div>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Explanation</h6>
+                                <div>{imageForgery?.explanation || "No forensic explanation available."}</div>
+                            </div>
+                            <div className="row mt-4 g-3">
+                                <div className="col-md-6">
+                                    <h6 className="fw-semibold">Detected artifacts</h6>
+                                    <ul className="mb-0">
+                                        {(imageForgery?.detected_artifacts || []).length ? imageForgery.detected_artifacts.map((item) => <li key={item}>{item}</li>) : <li>No artifacts flagged.</li>}
+                                    </ul>
+                                </div>
+                                <div className="col-md-6">
+                                    <h6 className="fw-semibold">Suspected regions</h6>
+                                    <ul className="mb-0">
+                                        {(imageForgery?.suspected_regions || []).length ? imageForgery.suspected_regions.map((item, index) => <li key={`${item.label}-${index}`}>{item.label || `Region ${index + 1}`}</li>) : <li>No suspicious regions identified.</li>}
+                                    </ul>
+                                </div>
                             </div>
                         </div>
                     </div>

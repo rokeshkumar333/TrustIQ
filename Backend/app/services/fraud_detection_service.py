@@ -28,6 +28,7 @@ def analyze_fraud(document, file_path=None):
     ocr_results = report.get("ocr_results") or {}
     qr_verification = report.get("qr_verification") or {}
     classification = report.get("document_classification") or {}
+    image_forgery = (document.get("image_forgery_analysis") or report.get("image_forgery_analysis") or {})
 
     passed_checks = []
     warnings = []
@@ -89,6 +90,13 @@ def analyze_fraud(document, file_path=None):
         passed_checks.append("Classification confidence is high")
     else:
         warnings.append("Classification confidence is moderate")
+
+    if image_forgery.get("manipulated"):
+        failed_checks.append("Image forgery analysis detected manipulation")
+    elif image_forgery.get("manipulation_score", 0) >= 35:
+        warnings.append("Image forgery analysis flagged suspicious regions")
+    else:
+        passed_checks.append("Image forgery analysis did not flag manipulation")
 
     file_path = file_path or document.get("file_path")
     if file_path and os.path.exists(file_path):
