@@ -6,6 +6,7 @@ from app.services.document_service import (
 )
 from app.services.report_service import build_verification_report
 from app.services.trust_score_service import calculate_ai_trust_score
+from app.services.fraud_detection_service import analyze_fraud
 from app.utils.auth_middleware import token_required
 
 documents = Blueprint("documents", __name__)
@@ -60,6 +61,10 @@ def report_details(report_id):
 
     report = build_verification_report(row, file_path=row.get("file_path"))
     trust_score = calculate_ai_trust_score(report)
+    fraud_analysis = analyze_fraud({
+        **row,
+        "verification_report": report,
+    }, file_path=row.get("file_path"))
 
     return jsonify({
         "success": True,
@@ -67,6 +72,7 @@ def report_details(report_id):
             **row,
             "verification_report": report,
             "trust_score_engine": trust_score,
+            "fraud_detection_engine": fraud_analysis,
             "report_summary": {
                 "score": trust_score["overall_score"],
                 "status": report["final_decision"],

@@ -33,6 +33,7 @@ function Report() {
     const verificationReport = useMemo(() => report?.verification_report || null, [report]);
     const summary = useMemo(() => report?.report_summary || null, [report]);
     const trustEngine = useMemo(() => report?.trust_score_engine || null, [report]);
+    const fraudEngine = useMemo(() => report?.fraud_detection_engine || null, [report]);
 
     const scoreClass = useMemo(() => {
         if (!summary) return "";
@@ -344,28 +345,49 @@ function Report() {
 
                     <div className="card shadow-sm border-0 mt-4 mb-4">
                         <div className="card-body">
-                            <h5 className="card-title">Fraud Detection Summary</h5>
-                            <div className="row gy-3">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="card-title mb-0">Document Fraud Analysis</h5>
+                                <span className={`badge bg-${fraudEngine?.fraud_score >= 60 ? "danger" : fraudEngine?.fraud_score >= 35 ? "warning" : "success"}`}>
+                                    {fraudEngine?.risk_level || "Pending"}
+                                </span>
+                            </div>
+                            <div className="row align-items-center">
+                                <div className="col-md-4 text-center py-3">
+                                    <div className={`display-6 fw-bold ${fraudEngine?.fraud_score >= 60 ? "text-danger" : fraudEngine?.fraud_score >= 35 ? "text-warning" : "text-success"}`}>
+                                        {Math.round(fraudEngine?.fraud_score || 0)}
+                                    </div>
+                                    <div className="text-muted">Fraud Score</div>
+                                </div>
+                                <div className="col-md-8">
+                                    <div className="progress" style={{ height: "10px" }}>
+                                        <div className={`progress-bar ${fraudEngine?.fraud_score >= 60 ? "bg-danger" : fraudEngine?.fraud_score >= 35 ? "bg-warning" : "bg-success"}`} style={{ width: `${fraudEngine?.fraud_score || 0}%` }} />
+                                    </div>
+                                    <div className="mt-2 text-muted">Confidence: {fraudEngine?.confidence ?? "-"}</div>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Passed checks</h6>
+                                <ul className="mb-0">
+                                    {(fraudEngine?.passed_checks || []).length ? fraudEngine.passed_checks.map((item) => <li key={item}><span className="text-success">✓</span> {item}</li>) : <li>No passed checks recorded.</li>}
+                                </ul>
+                            </div>
+                            <div className="row mt-4 g-3">
                                 <div className="col-md-6">
-                                    <strong>Tampering indicators</strong>
-                                    <div>{verificationReport?.fraud_detection_summary?.tampering_indicators?.join(", ") || "None"}</div>
+                                    <h6 className="fw-semibold">Warnings</h6>
+                                    <ul className="mb-0">
+                                        {(fraudEngine?.warnings || []).length ? fraudEngine.warnings.map((item) => <li key={item}><span className="text-warning">⚠</span> {item}</li>) : <li>No warnings.</li>}
+                                    </ul>
                                 </div>
                                 <div className="col-md-6">
-                                    <strong>Missing metadata</strong>
-                                    <div>{verificationReport?.fraud_detection_summary?.missing_metadata?.join(", ") || "None"}</div>
+                                    <h6 className="fw-semibold">Failed checks</h6>
+                                    <ul className="mb-0">
+                                        {(fraudEngine?.failed_checks || []).length ? fraudEngine.failed_checks.map((item) => <li key={item}><span className="text-danger">✕</span> {item}</li>) : <li>No failed checks.</li>}
+                                    </ul>
                                 </div>
-                                <div className="col-md-6">
-                                    <strong>OCR inconsistencies</strong>
-                                    <div>{verificationReport?.fraud_detection_summary?.ocr_inconsistencies?.join(", ") || "None"}</div>
-                                </div>
-                                <div className="col-md-6">
-                                    <strong>Invalid QR</strong>
-                                    <div>{verificationReport?.fraud_detection_summary?.invalid_qr?.join(", ") || "None"}</div>
-                                </div>
-                                <div className="col-md-12">
-                                    <strong>Suspicious patterns</strong>
-                                    <div>{verificationReport?.fraud_detection_summary?.suspicious_patterns?.join(", ") || "None"}</div>
-                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Recommended action</h6>
+                                <div>{fraudEngine?.recommended_action || "No action available."}</div>
                             </div>
                         </div>
                     </div>
