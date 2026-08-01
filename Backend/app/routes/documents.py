@@ -4,6 +4,7 @@ from app.services.document_service import (
     get_document_by_id,
     delete_document
 )
+from app.services.report_service import build_verification_report
 from app.utils.auth_middleware import token_required
 
 documents = Blueprint("documents", __name__)
@@ -56,9 +57,19 @@ def report_details(report_id):
             "message": "Report not found"
         }), 404
 
+    report = build_verification_report(row, file_path=row.get("file_path"))
+
     return jsonify({
         "success": True,
-        "report": row
+        "report": {
+            **row,
+            "verification_report": report,
+            "report_summary": {
+                "score": report["ai_trust_score"]["overall_score"],
+                "status": report["final_decision"],
+                "risk_level": report["ai_trust_score"]["risk_level"],
+            },
+        }
     })
 
 
