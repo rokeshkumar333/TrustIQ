@@ -32,6 +32,7 @@ function Report() {
 
     const verificationReport = useMemo(() => report?.verification_report || null, [report]);
     const summary = useMemo(() => report?.report_summary || null, [report]);
+    const trustEngine = useMemo(() => report?.trust_score_engine || null, [report]);
 
     const scoreClass = useMemo(() => {
         if (!summary) return "";
@@ -48,9 +49,41 @@ function Report() {
         return "danger";
     }, [summary]);
 
+    const scoreTextColor = useMemo(() => {
+        if (!summary) return "text-secondary";
+        if (summary.score >= 80) return "text-success";
+        if (summary.score >= 60) return "text-warning";
+        return "text-danger";
+    }, [summary]);
+
     const renderBadge = (value, variant = "secondary") => (
         <span className={`badge bg-${variant}`}>{value}</span>
     );
+
+    const renderGauge = (value) => {
+        const percentage = Math.max(0, Math.min(100, value));
+        const radius = 46;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (percentage / 100) * circumference;
+
+        return (
+            <svg width="140" height="140" viewBox="0 0 120 120" aria-label="trust score gauge">
+                <circle cx="60" cy="60" r={radius} fill="none" stroke="#e9ecef" strokeWidth="12" />
+                <circle
+                    cx="60"
+                    cy="60"
+                    r={radius}
+                    fill="none"
+                    stroke={scoreTone === "success" ? "#198754" : scoreTone === "warning" ? "#f59e0b" : "#dc3545"}
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                    transform="rotate(-90 60 60)"
+                />
+            </svg>
+        );
+    };
 
     const handlePrint = () => window.print();
 
@@ -128,17 +161,107 @@ function Report() {
                     <div className="card shadow-sm border-0 mt-4">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-center mb-3">
-                                <h5 className="card-title mb-0">Trust Score Overview</h5>
+                                <h5 className="card-title mb-0">AI Trust Score Engine</h5>
                                 <span className={`badge bg-${scoreTone} fs-6`}>{summary?.score ?? report.trust_score}/100</span>
                             </div>
-                            <div className="progress" style={{ height: "12px" }}>
-                                <div
-                                    className={`progress-bar bg-${scoreTone}`}
-                                    role="progressbar"
-                                    style={{ width: `${summary?.score ?? report.trust_score}%` }}
-                                />
+                            <div className="row align-items-center">
+                                <div className="col-md-4 text-center py-3">
+                                    <div className="position-relative d-inline-flex align-items-center justify-content-center">
+                                        {renderGauge(summary?.score ?? report.trust_score)}
+                                        <div className="position-absolute text-center">
+                                            <div className={`display-6 fw-bold ${scoreTextColor}`}>{Math.round(summary?.score ?? report.trust_score)}</div>
+                                            <div className="text-muted small">/100</div>
+                                        </div>
+                                    </div>
+                                    <div className="text-muted mt-2">Overall Trust Score</div>
+                                </div>
+                                <div className="col-md-8">
+                                    <div className="progress mb-3" style={{ height: "12px" }}>
+                                        <div className={`progress-bar bg-${scoreTone}`} role="progressbar" style={{ width: `${summary?.score ?? report.trust_score}%` }} />
+                                    </div>
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <strong>Risk Level</strong>
+                                        <span className={`badge bg-${scoreTone}`}>{summary?.risk_level || "Unknown"}</span>
+                                    </div>
+                                    <div className="text-muted">Recommended action: {trustEngine?.recommended_action || "No recommendation available"}</div>
+                                </div>
                             </div>
-                            <div className="mt-2 text-muted">Risk level: {summary?.risk_level || "Unknown"}</div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Explanation panel</h6>
+                                <ul className="mb-0">
+                                    {trustEngine?.reasons_affecting_score?.length ? trustEngine.reasons_affecting_score.map((item) => <li key={item}>{item}</li>) : <li>No reasons available.</li>}
+                                </ul>
+                            </div>
+                            <div className="row mt-4 g-3">
+                                <div className="col-md-6">
+                                    <h6 className="fw-semibold">Positive indicators</h6>
+                                    <ul className="mb-0">
+                                        {trustEngine?.positive_indicators?.length ? trustEngine.positive_indicators.map((item) => <li key={item}>{item}</li>) : <li>None</li>}
+                                    </ul>
+                                </div>
+                                <div className="col-md-6">
+                                    <h6 className="fw-semibold">Negative indicators</h6>
+                                    <ul className="mb-0">
+                                        {trustEngine?.negative_indicators?.length ? trustEngine.negative_indicators.map((item) => <li key={item}>{item}</li>) : <li>None</li>}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Score breakdown</h6>
+                                <div className="row g-3">
+                                    {(trustEngine?.score_breakdown || []).map((item) => (
+                                        <div className="col-md-6" key={item.module}>
+                                            <div className="border rounded p-3 h-100">
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <strong>{item.module}</strong>
+                                                    <span className="fw-semibold">{item.score}/{item.max_score}</span>
+                                                </div>
+                                                <div className="progress mt-2" style={{ height: "8px" }}>
+                                                    <div className={`progress-bar ${item.impact === "positive" ? "bg-success" : item.impact === "negative" ? "bg-danger" : "bg-warning"}`} style={{ width: `${(item.score / item.max_score) * 100}%` }} />
+                                                </div>
+                                                <div className="text-muted small mt-2">{item.reason}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <h6 className="fw-semibold">Confidence breakdown</h6>
+                                <div className="row g-3">
+                                    <div className="col-md-6">
+                                        <div className="border rounded p-3">
+                                            <div className="d-flex justify-content-between">
+                                                <span>OCR confidence</span>
+                                                <strong>{trustEngine?.confidence_breakdown?.ocr_confidence ?? "-"}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="border rounded p-3">
+                                            <div className="d-flex justify-content-between">
+                                                <span>Classification confidence</span>
+                                                <strong>{trustEngine?.confidence_breakdown?.classification_confidence ?? "-"}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="border rounded p-3">
+                                            <div className="d-flex justify-content-between">
+                                                <span>QR confidence</span>
+                                                <strong>{trustEngine?.confidence_breakdown?.qr_confidence ?? "-"}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <div className="border rounded p-3">
+                                            <div className="d-flex justify-content-between">
+                                                <span>Metadata completeness</span>
+                                                <strong>{trustEngine?.confidence_breakdown?.metadata_completeness ?? "-"}</strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -150,6 +273,7 @@ function Report() {
                                 <div className="col-md-6"><strong>File type</strong><div>{verificationReport?.document_information?.file_type}</div></div>
                                 <div className="col-md-6"><strong>Upload date</strong><div>{verificationReport?.document_information?.upload_date}</div></div>
                                 <div className="col-md-6"><strong>File size</strong><div>{verificationReport?.document_information?.file_size}</div></div>
+                                <div className="col-md-6"><strong>Processing time</strong><div>{trustEngine?.confidence_breakdown?.processing_time_ms || 0} ms</div></div>
                             </div>
                         </div>
                     </div>

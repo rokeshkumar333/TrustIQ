@@ -5,6 +5,7 @@ from app.services.document_service import (
     delete_document
 )
 from app.services.report_service import build_verification_report
+from app.services.trust_score_service import calculate_ai_trust_score
 from app.utils.auth_middleware import token_required
 
 documents = Blueprint("documents", __name__)
@@ -58,16 +59,18 @@ def report_details(report_id):
         }), 404
 
     report = build_verification_report(row, file_path=row.get("file_path"))
+    trust_score = calculate_ai_trust_score(report)
 
     return jsonify({
         "success": True,
         "report": {
             **row,
             "verification_report": report,
+            "trust_score_engine": trust_score,
             "report_summary": {
-                "score": report["ai_trust_score"]["overall_score"],
+                "score": trust_score["overall_score"],
                 "status": report["final_decision"],
-                "risk_level": report["ai_trust_score"]["risk_level"],
+                "risk_level": trust_score["risk_level"],
             },
         }
     })
