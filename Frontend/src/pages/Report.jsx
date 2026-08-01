@@ -343,6 +343,29 @@ function Report() {
                         </div>
                     </div>
 
+                    <div className="card shadow-sm border-0 mt-4">
+                        <div className="card-body">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="card-title mb-0">Digital Signature Verification</h5>
+                                <span className={`badge bg-${report?.signature_verification?.signed ? (report.signature_verification.verification_status === "Valid" ? "success" : "warning") : "secondary"}`}>
+                                    {report?.signature_verification?.signed ? (report.signature_verification.verification_status || "Unknown") : "Not Signed"}
+                                </span>
+                            </div>
+                            <div className="row gy-3">
+                                <div className="col-md-6"><strong>Signed</strong><div>{report?.signature_verification?.signed ? "Yes" : "No"}</div></div>
+                                <div className="col-md-6"><strong>Verification Status</strong><div>{report?.signature_verification?.verification_status || "Unknown"}</div></div>
+                                <div className="col-md-6"><strong>Certificate Validity</strong><div>{report?.signature_verification?.certificate_valid === true ? "Valid" : report?.signature_verification?.certificate_valid === false ? "Expired" : "Unknown"}</div></div>
+                                <div className="col-md-6"><strong>Signer Name</strong><div>{report?.signature_verification?.signer_name || "Not available"}</div></div>
+                                <div className="col-md-6"><strong>Issuer</strong><div>{report?.signature_verification?.issuer || "Not available"}</div></div>
+                                <div className="col-md-6"><strong>Signing Time</strong><div>{report?.signature_verification?.signing_time || "Not available"}</div></div>
+                                <div className="col-md-6"><strong>Signature Algorithm</strong><div>{report?.signature_verification?.signature_algorithm || "Not available"}</div></div>
+                                <div className="col-md-6"><strong>Hash Algorithm</strong><div>{report?.signature_verification?.hash_algorithm || "Not available"}</div></div>
+                                <div className="col-md-6"><strong>Number of Signatures</strong><div>{report?.signature_verification?.signature_count ?? 0}</div></div>
+                                <div className="col-md-12"><strong>Verification Message</strong><div>{report?.signature_verification?.verification_message || "No message available."}</div></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="card shadow-sm border-0 mt-4 mb-4">
                         <div className="card-body">
                             <div className="d-flex justify-content-between align-items-center mb-3">

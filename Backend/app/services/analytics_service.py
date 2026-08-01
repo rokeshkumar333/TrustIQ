@@ -4,6 +4,27 @@ from collections import Counter
 def build_analytics_summary(documents):
     status_counts = Counter(str(doc.get("status", "Not Processed") or "Not Processed") for doc in documents)
 
+    signature_counts = {
+        "total_signed_documents": 0,
+        "valid_signatures": 0,
+        "invalid_signatures": 0,
+        "unsigned_documents": 0,
+        "expired_certificates": 0,
+    }
+
+    for doc in documents:
+        sig = (doc.get("signature_verification") or {})
+        if sig.get("signed"):
+            signature_counts["total_signed_documents"] += 1
+            if sig.get("verification_status") == "Valid":
+                signature_counts["valid_signatures"] += 1
+            else:
+                signature_counts["invalid_signatures"] += 1
+            if sig.get("certificate_valid") is False:
+                signature_counts["expired_certificates"] += 1
+        else:
+            signature_counts["unsigned_documents"] += 1
+
     score_values = [int(doc.get("trust_score", 0) or 0) for doc in documents]
     if score_values:
         average_score = round(sum(score_values) / len(score_values))
@@ -20,4 +41,5 @@ def build_analytics_summary(documents):
         "max_score": max_score,
         "min_score": min_score,
         "status_breakdown": dict(status_counts),
+        "signature_metrics": signature_counts,
     }
