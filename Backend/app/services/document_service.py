@@ -12,10 +12,15 @@ def serialize_document_row(row):
     qr_verification = {}
     if len(row) > 9 and row[9]:
         try:
-            fields = json.loads(row[9])
-            qr_verification = fields.pop("qr_verification", {}) if isinstance(fields, dict) else {}
+            metadata = json.loads(row[9]) if isinstance(row[9], str) else row[9]
+            if isinstance(metadata, dict):
+                qr_verification = metadata.pop("qr_verification", {})
+                fields = metadata
+            else:
+                fields = {}
         except (TypeError, ValueError):
             fields = {}
+            qr_verification = {}
 
     return {
         "id": row[0],
