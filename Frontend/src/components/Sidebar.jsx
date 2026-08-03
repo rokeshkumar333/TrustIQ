@@ -2,96 +2,53 @@ import { NavLink, useNavigate } from "react-router-dom";
 import authService from "../services/authService";
 
 function Sidebar() {
-
     const navigate = useNavigate();
 
     const handleLogout = () => {
-
         authService.logout();
-
         navigate("/login");
-
     };
 
+    const navItems = [
+        { to: "/dashboard", label: "Dashboard", icon: "bi-speedometer2" },
+        { to: "/upload", label: "Upload", icon: "bi-cloud-arrow-up" },
+        { to: "/documents", label: "Documents", icon: "bi-files" },
+        { to: "/analytics", label: "Analytics", icon: "bi-bar-chart-line" },
+        { to: "/classification", label: "Classification", icon: "bi-diagram-3" },
+        { to: "/qr-verification", label: "QR Verification", icon: "bi-qr-code-scan" },
+    ];
+
     return (
+        <aside className="sidebar">
+            <div>
+                <div className="logo">
+                    <div className="brand-mark">T</div>
+                    <div>
+                        <h2>TrustIQ</h2>
+                        <p>Enterprise trust engine</p>
+                    </div>
+                </div>
 
-        <div className="sidebar">
-
-            <div className="logo">
-
-                <h2>TrustIQ</h2>
-
+                <nav className="nav-links">
+                    {navItems.map((item) => (
+                        <NavLink
+                            key={item.to}
+                            to={item.to}
+                            className={({ isActive }) => (isActive ? "menu active" : "menu")}
+                        >
+                            <i className={`bi ${item.icon}`} />
+                            <span>{item.label}</span>
+                        </NavLink>
+                    ))}
+                </nav>
             </div>
 
-            <nav>
-
-                <NavLink
-                    to="/dashboard"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    📊 Dashboard
-                </NavLink>
-
-                <NavLink
-                    to="/upload"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    📤 Upload
-                </NavLink>
-
-                <NavLink
-                    to="/documents"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    📁 Documents
-                </NavLink>
-
-                <NavLink
-                    to="/analytics"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    📈 Analytics
-                </NavLink>
-
-                <NavLink
-                    to="/classification"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    🧠 Classification
-                </NavLink>
-
-                <NavLink
-                    to="/qr-verification"
-                    className={({ isActive }) =>
-                        isActive ? "menu active" : "menu"
-                    }
-                >
-                    🔍 QR Verification
-                </NavLink>
-
-            </nav>
-
-            <button
-                className="logout-btn"
-                onClick={handleLogout}
-            >
-                🚪 Logout
+            <button className="logout-btn" onClick={handleLogout}>
+                <i className="bi bi-box-arrow-right" />
+                <span>Logout</span>
             </button>
-
-        </div>
-
+        </aside>
     );
-
 }
 
 export default Sidebar;

@@ -29,6 +29,7 @@ def analyze_fraud(document, file_path=None):
     qr_verification = report.get("qr_verification") or {}
     classification = report.get("document_classification") or {}
     image_forgery = (document.get("image_forgery_analysis") or report.get("image_forgery_analysis") or {})
+    similarity_analysis = (document.get("document_similarity_analysis") or report.get("document_similarity_analysis") or {})
 
     passed_checks = []
     warnings = []
@@ -97,6 +98,15 @@ def analyze_fraud(document, file_path=None):
         warnings.append("Image forgery analysis flagged suspicious regions")
     else:
         passed_checks.append("Image forgery analysis did not flag manipulation")
+
+    if similarity_analysis.get("exact_match"):
+        failed_checks.append("Document similarity analysis detected an exact duplicate")
+    elif similarity_analysis.get("duplicate") and similarity_analysis.get("similarity_score", 0) >= 95:
+        warnings.append("Document similarity analysis detected a near duplicate")
+    elif similarity_analysis.get("duplicate"):
+        warnings.append("Document similarity analysis detected moderate duplication")
+    else:
+        passed_checks.append("Document similarity analysis did not indicate duplication")
 
     file_path = file_path or document.get("file_path")
     if file_path and os.path.exists(file_path):

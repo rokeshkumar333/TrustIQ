@@ -168,6 +168,42 @@ def calculate_ai_trust_score(report):
         "reason": forgery_reason,
         "confidence": round(float(forgery_analysis.get("confidence", 0) or 0), 2),
     })
+
+    similarity_analysis = (report.get("document_similarity_analysis") or {})
+    similarity_penalty = 0
+    similarity_impact = "positive"
+    similarity_reason = "Document similarity checks did not indicate duplicate content."
+    if similarity_analysis.get("exact_match"):
+        similarity_penalty = 40
+        similarity_impact = "negative"
+        similarity_reason = "An exact duplicate of the document was detected."
+        _add_unique(negatives, "Exact duplicate document detected")
+        _add_unique(reasons, "The document matched an existing upload exactly")
+    elif similarity_analysis.get("duplicate") and similarity_analysis.get("similarity_score", 0) >= 95:
+        similarity_penalty = 30
+        similarity_impact = "negative"
+        similarity_reason = "A highly similar duplicate document was detected."
+        _add_unique(negatives, "Highly similar document detected")
+        _add_unique(reasons, "Near-duplicate content reduced trust")
+    elif similarity_analysis.get("duplicate") and similarity_analysis.get("similarity_score", 0) >= 80:
+        similarity_penalty = 20
+        similarity_impact = "negative"
+        similarity_reason = "The document appears to be a near duplicate of an existing upload."
+        _add_unique(negatives, "Near duplicate document detected")
+        _add_unique(reasons, "Similarity checks indicated possible duplication")
+    else:
+        _add_unique(positives, "Document similarity checks did not indicate duplication")
+        _add_unique(reasons, "The document remained distinct from prior uploads")
+
+    breakdown.append({
+        "module": "Document Similarity",
+        "score": round(max(0, 20 - similarity_penalty), 2),
+        "max_score": 20,
+        "impact": similarity_impact,
+        "reason": similarity_reason,
+        "confidence": round(float(similarity_analysis.get("confidence", 0) or 0), 2),
+    })
+
     if integrity_penalty == 0:
         _add_unique(positives, "Document integrity appears consistent")
         _add_unique(reasons, "Integrity checks remained stable")

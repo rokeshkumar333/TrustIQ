@@ -28,83 +28,43 @@ function Login() {
 
         try {
             await authService.login(formData);
-
             navigate("/dashboard");
         } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                "Invalid email or password."
-            );
+            setError(err.response?.data?.message || "Invalid email or password.");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="container mt-5">
-            <div className="row justify-content-center">
-                <div className="col-md-5">
+        <div className="auth-hero">
+            <div className="auth-card">
+                <div className="text-center mb-4">
+                    <div className="brand-mark mx-auto mb-3"><i className="bi bi-shield-check" /></div>
+                    <h2 className="mb-2">Welcome back</h2>
+                    <p className="text-muted">Sign in to continue your trust verification workflow.</p>
+                </div>
 
-                    <div className="card shadow">
+                {error && <div className="alert alert-danger">{error}</div>}
 
-                        <div className="card-body">
-
-                            <h2 className="text-center mb-4">
-                                TrustIQ Login
-                            </h2>
-
-                            {error && (
-                                <div className="alert alert-danger">
-                                    {error}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleSubmit}>
-
-                                <div className="mb-3">
-                                    <label>Email</label>
-
-                                    <input
-                                        type="email"
-                                        className="form-control"
-                                        name="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-
-                                <div className="mb-3">
-                                    <label>Password</label>
-
-                                    <input
-                                        type="password"
-                                        className="form-control"
-                                        name="password"
-                                        value={formData.password}
-                                        onChange={handleChange}
-                                        required
-                                    />
-                                </div>
-
-                                <button
-                                    className="btn btn-primary w-100"
-                                    disabled={loading}
-                                >
-                                    {loading ? "Logging in..." : "Login"}
-                                </button>
-
-                            </form>
-
-                            <div className="text-center mt-3">
-                                Don't have an account?
-                                <Link to="/register"> Register</Link>
-                            </div>
-
-                        </div>
-
+                <form onSubmit={handleSubmit}>
+                    <div className="mb-3">
+                        <label className="form-label">Email</label>
+                        <input type="email" className="form-control" name="email" value={formData.email} onChange={handleChange} required />
                     </div>
 
+                    <div className="mb-3">
+                        <label className="form-label">Password</label>
+                        <input type="password" className="form-control" name="password" value={formData.password} onChange={handleChange} required />
+                    </div>
+
+                    <button className="btn btn-primary w-100" disabled={loading}>
+                        {loading ? "Signing in..." : "Login"}
+                    </button>
+                </form>
+
+                <div className="text-center mt-3">
+                    Don&apos;t have an account? <Link to="/register">Register</Link>
                 </div>
             </div>
         </div>

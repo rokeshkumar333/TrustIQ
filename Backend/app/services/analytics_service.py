@@ -18,6 +18,12 @@ def build_analytics_summary(documents):
         "manipulation_percentage": 0,
     }
 
+    similarity_counts = {
+        "duplicate_documents": 0,
+        "near_duplicate_documents": 0,
+        "average_similarity": 0,
+    }
+
     for doc in documents:
         sig = (doc.get("signature_verification") or {})
         if sig.get("signed"):
@@ -35,6 +41,12 @@ def build_analytics_summary(documents):
         if image_forgery.get("manipulated"):
             forgery_counts["total_manipulated_documents"] += 1
 
+        similarity_analysis = (doc.get("document_similarity_analysis") or (doc.get("verification_report") or {}).get("document_similarity_analysis") or {})
+        if similarity_analysis.get("duplicate"):
+            similarity_counts["duplicate_documents"] += 1
+        if similarity_analysis.get("duplicate") and similarity_analysis.get("similarity_score", 0) >= 80:
+            similarity_counts["near_duplicate_documents"] += 1
+
     score_values = [int(doc.get("trust_score", 0) or 0) for doc in documents]
     if score_values:
         average_score = round(sum(score_values) / len(score_values))
@@ -48,6 +60,7 @@ def build_analytics_summary(documents):
     if documents:
         forgery_counts["forgery_detection_rate"] = round((forgery_counts["total_manipulated_documents"] / len(documents)) * 100, 2)
         forgery_counts["manipulation_percentage"] = round((forgery_counts["total_manipulated_documents"] / len(documents)) * 100, 2)
+        similarity_counts["average_similarity"] = round(sum((doc.get("document_similarity_analysis") or {}).get("similarity_score", 0) for doc in documents if isinstance(doc, dict)) / len(documents), 2)
 
     return {
         "total_documents": len(documents),
@@ -57,4 +70,5 @@ def build_analytics_summary(documents):
         "status_breakdown": dict(status_counts),
         "signature_metrics": signature_counts,
         "forgery_metrics": forgery_counts,
+        "similarity_metrics": similarity_counts,
     }

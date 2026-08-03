@@ -3,22 +3,13 @@ import Sidebar from "./Sidebar";
 
 function Layout({ children }) {
     return (
-        <div className="layout">
-
+        <div className="app-shell">
             <Sidebar />
 
             <div className="main-section">
-
                 <Navbar />
-
-                <div className="content">
-
-                    {children}
-
-                </div>
-
+                <main className="content">{children}</main>
             </div>
-
         </div>
     );
 }

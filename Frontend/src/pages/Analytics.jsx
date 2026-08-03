@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import Layout from "../components/Layout";
+import Loader from "../components/Loader";
 import api from "../api/api";
 
 function Analytics() {
@@ -36,41 +37,51 @@ function Analytics() {
 
             <div className="card-grid">
                 <div className="stat-card">
-                    <div className="stat-title">Total Documents</div>
-                    <div className="stat-value">{loading ? "..." : summary.total_documents}</div>
+                    <div className="stat-title">Total documents</div>
+                    <div className="stat-value">{loading ? "—" : summary.total_documents}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-title">Average Score</div>
-                    <div className="stat-value">{loading ? "..." : `${summary.average_score}%`}</div>
+                    <div className="stat-title">Average score</div>
+                    <div className="stat-value">{loading ? "—" : `${summary.average_score}%`}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-title">Highest Score</div>
-                    <div className="stat-value">{loading ? "..." : `${summary.max_score}%`}</div>
+                    <div className="stat-title">Highest score</div>
+                    <div className="stat-value">{loading ? "—" : `${summary.max_score}%`}</div>
                 </div>
                 <div className="stat-card">
-                    <div className="stat-title">Lowest Score</div>
-                    <div className="stat-value">{loading ? "..." : `${summary.min_score}%`}</div>
+                    <div className="stat-title">Lowest score</div>
+                    <div className="stat-value">{loading ? "—" : `${summary.min_score}%`}</div>
                 </div>
             </div>
 
             <div className="table-container">
-                <h4 className="mb-3">Status Breakdown</h4>
-                <table className="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {Object.entries(summary.status_breakdown || {}).map(([status, count]) => (
-                            <tr key={status}>
-                                <td>{status}</td>
-                                <td>{count}</td>
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 className="mb-1">Status breakdown</h4>
+                        <p className="text-muted mb-0">Resolution distribution by review status</p>
+                    </div>
+                    <span className="badge-soft">Updated insights</span>
+                </div>
+                {loading ? (
+                    <Loader />
+                ) : (
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Status</th>
+                                <th>Count</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {Object.entries(summary.status_breakdown || {}).map(([status, count]) => (
+                                <tr key={status}>
+                                    <td>{status}</td>
+                                    <td>{count}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
             </div>
         </Layout>
     );

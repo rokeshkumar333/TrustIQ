@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../components/Layout";
+import Loader from "../components/Loader";
 import api from "../api/api";
 
 function Dashboard() {
@@ -30,128 +31,86 @@ function Dashboard() {
         loadDashboard();
     }, []);
 
+    const statCards = [
+        { title: "Documents uploaded", value: loading ? "—" : summary.total_documents, icon: "bi-file-earmark-check", tone: "primary" },
+        { title: "Average trust score", value: loading ? "—" : `${summary.average_trust_score}%`, icon: "bi-graph-up-arrow", tone: "success" },
+        { title: "Suspicious documents", value: loading ? "—" : summary.suspicious_documents, icon: "bi-exclamation-triangle", tone: "warning" },
+        { title: "Today’s uploads", value: loading ? "—" : summary.today_uploads, icon: "bi-cloud-arrow-up", tone: "info" },
+    ];
+
     return (
         <Layout>
-
             <div className="dashboard-title">
-                <h2>Dashboard</h2>
-                <p>Welcome to TrustIQ Document Verification System</p>
+                <h2>Executive dashboard</h2>
+                <p>Monitor document flow, trust outcomes, and review queues in one place.</p>
             </div>
-
-            {/* Statistics Cards */}
 
             <div className="card-grid">
-
-                <div className="stat-card">
-                    <div className="stat-title">
-                        Documents Uploaded
+                {statCards.map((card) => (
+                    <div className="stat-card" key={card.title}>
+                        <div className="d-flex justify-content-between align-items-start">
+                            <div>
+                                <div className="stat-title">{card.title}</div>
+                                <div className="stat-value">{card.value}</div>
+                            </div>
+                            <div className={`rounded-circle p-2 bg-${card.tone === "warning" ? "warning" : card.tone === "success" ? "success" : card.tone === "info" ? "info" : "primary"} bg-opacity-10 text-${card.tone === "warning" ? "warning" : card.tone === "success" ? "success" : card.tone === "info" ? "info" : "primary"}`}>
+                                <i className={`bi ${card.icon}`} />
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="stat-value">
-                        {loading ? "..." : summary.total_documents}
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-title">
-                        Average Trust Score
-                    </div>
-
-                    <div className="stat-value">
-                        {loading ? "..." : `${summary.average_trust_score}%`}
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-title">
-                        Suspicious Documents
-                    </div>
-
-                    <div className="stat-value">
-                        {loading ? "..." : summary.suspicious_documents}
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-title">
-                        Today's Uploads
-                    </div>
-
-                    <div className="stat-value">
-                        {loading ? "..." : summary.today_uploads}
-                    </div>
-                </div>
-
+                ))}
             </div>
-
-            {/* Recent Documents */}
 
             <div className="table-container">
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h4 className="mb-1">Recent documents</h4>
+                        <p className="text-muted mb-0">Latest review activity and trust decisions</p>
+                    </div>
+                    <span className="badge-soft">Live updates</span>
+                </div>
 
-                <h4 style={{ marginBottom: "20px" }}>
-                    Recent Documents
-                </h4>
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>Document</th>
-
-                            <th>Trust Score</th>
-
-                            <th>Status</th>
-
-                            <th>Action</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody>
-
-                        {documents.length === 0 ? (
+                {loading ? (
+                    <Loader />
+                ) : (
+                    <table>
+                        <thead>
                             <tr>
-                                <td colSpan="4" className="text-center">
-                                    {loading ? "Loading recent documents..." : "No documents uploaded yet."}
-                                </td>
+                                <th>Document</th>
+                                <th>Trust score</th>
+                                <th>Status</th>
+                                <th>Action</th>
                             </tr>
-                        ) : (
-                            documents.map((doc) => (
-                                <tr key={doc.id}>
-                                    <td>{doc.original_filename}</td>
-                                    <td>{doc.trust_score || 0}%</td>
-                                    <td>
-                                        <span
-                                            className={
-                                                doc.status === "Verified"
-                                                    ? "status-good"
-                                                    : "status-review"
-                                            }
-                                        >
-                                            {doc.status || "Not Processed"}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            className="btn-primary-custom"
-                                            onClick={() => navigate(`/report/${doc.id}`)}
-                                        >
-                                            View Report
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {documents.length === 0 ? (
+                                <tr>
+                                    <td colSpan="4" className="text-center py-4 text-muted">
+                                        No documents uploaded yet.
                                     </td>
                                 </tr>
-                            ))
-                        )}
-
-                    </tbody>
-
-                </table>
-
+                            ) : (
+                                documents.map((doc) => (
+                                    <tr key={doc.id}>
+                                        <td>{doc.original_filename}</td>
+                                        <td>{doc.trust_score || 0}%</td>
+                                        <td>
+                                            <span className={doc.status === "Verified" ? "status-good" : "status-review"}>
+                                                {doc.status || "Not Processed"}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button className="btn-primary-custom" onClick={() => navigate(`/report/${doc.id}`)}>
+                                                View report
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                )}
             </div>
-
         </Layout>
     );
 }

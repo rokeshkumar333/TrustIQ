@@ -4,7 +4,6 @@ import Layout from "../components/Layout";
 import uploadService from "../services/uploadService";
 
 function Upload() {
-
     const navigate = useNavigate();
 
     const [selectedFile, setSelectedFile] = useState(null);
@@ -13,240 +12,73 @@ function Upload() {
     const [error, setError] = useState("");
 
     const handleFileChange = (e) => {
-
         if (e.target.files.length > 0) {
-
             setSelectedFile(e.target.files[0]);
             setError("");
             setUploadResult(null);
-
         }
-
     };
 
     const handleUpload = async () => {
-
         if (!selectedFile) {
-
             setError("Please select a document.");
-
             return;
-
         }
 
         try {
-
             setLoading(true);
             setError("");
-
             const response = await uploadService.uploadFile(selectedFile);
-
             setUploadResult(response);
-
         } catch (err) {
-
             console.error(err);
-
-            setError(
-
-                err.response?.data?.error ||
-
-                err.response?.data?.message ||
-
-                "Upload Failed"
-
-            );
-
+            setError(err.response?.data?.error || err.response?.data?.message || "Upload failed");
         } finally {
-
             setLoading(false);
-
         }
-
     };
 
     return (
-
         <Layout>
-
             <div className="dashboard-title">
-
-                <h2>Upload Document</h2>
-
-                <p>
-
-                    Upload PDF, JPG, JPEG or PNG documents.
-
-                </p>
-
+                <h2>Upload document</h2>
+                <p>Upload PDF, JPG, JPEG, or PNG documents for instant verification.</p>
             </div>
 
             <div className="table-container">
-
-                {error && (
-
-                    <div className="alert alert-danger">
-
-                        {error}
-
-                    </div>
-
-                )}
+                {error && <div className="alert alert-danger">{error}</div>}
 
                 <div className="mb-4">
-
-                    <label className="form-label fw-bold">
-
-                        Select Document
-
-                    </label>
-
-                    <input
-
-                        type="file"
-
-                        className="form-control"
-
-                        accept=".pdf,.png,.jpg,.jpeg"
-
-                        onChange={handleFileChange}
-
-                    />
-
+                    <label className="form-label fw-bold">Select document</label>
+                    <input type="file" className="form-control" accept=".pdf,.png,.jpg,.jpeg" onChange={handleFileChange} />
                 </div>
 
                 {selectedFile && (
-
-                    <div className="alert alert-info">
-
-                        <strong>Selected File:</strong>
-
-                        <br />
-
-                        {selectedFile.name}
-
+                    <div className="alert alert-info mb-4">
+                        <strong>Selected file:</strong> {selectedFile.name}
                     </div>
-
                 )}
 
-                <button
-
-                    className="btn btn-primary"
-
-                    disabled={loading}
-
-                    onClick={handleUpload}
-
-                >
-
-                    {
-
-                        loading ?
-
-                        "Uploading..." :
-
-                        "Upload Document"
-
-                    }
-
+                <button className="btn btn-primary" disabled={loading} onClick={handleUpload}>
+                    {loading ? "Uploading..." : "Upload document"}
                 </button>
 
-                {
-
-                    uploadResult && (
-
-                        <>
-
-                            <hr />
-
-                            <h4>
-
-                                Upload Successful
-
-                            </h4>
-
-                            <br />
-
-                            <table className="table table-bordered">
-
-                                <tbody>
-
-                                    <tr>
-
-                                        <th>
-
-                                            Original File
-
-                                        </th>
-
-                                        <td>
-
-                                            {uploadResult.original_filename}
-
-                                        </td>
-
-                                    </tr>
-
-                                    <tr>
-
-                                        <th>
-
-                                            Trust Score
-
-                                        </th>
-
-                                        <td>
-
-                                            {uploadResult.trust_score}
-
-                                        </td>
-
-                                    </tr>
-
-                                    <tr>
-
-                                        <th>
-
-                                            Status
-
-                                        </th>
-
-                                        <td>
-
-                                            {uploadResult.status}
-
-                                        </td>
-
-                                    </tr>
-
-                                </tbody>
-
-                            </table>
-
-                            <button
-
-                                className="btn btn-success"
-
-                                onClick={() => navigate("/documents")}
-
-                            >
-
-                                Go To Documents
-
-                            </button>
-
-                        </>
-
-                    )
-
-                }
-
+                {uploadResult && (
+                    <div className="mt-4">
+                        <h4 className="mb-3">Upload successful</h4>
+                        <div className="panel-card p-3">
+                            <div className="row g-3">
+                                <div className="col-md-4"><strong>Original file</strong><div>{uploadResult.original_filename}</div></div>
+                                <div className="col-md-4"><strong>Trust score</strong><div>{uploadResult.trust_score}</div></div>
+                                <div className="col-md-4"><strong>Status</strong><div>{uploadResult.status}</div></div>
+                            </div>
+                        </div>
+                        <button className="btn btn-success mt-3" onClick={() => navigate("/documents")}>Go to documents</button>
+                    </div>
+                )}
             </div>
-
         </Layout>
-
     );
-
 }
 
 export default Upload;

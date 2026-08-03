@@ -35,6 +35,7 @@ function Report() {
     const trustEngine = useMemo(() => report?.trust_score_engine || null, [report]);
     const fraudEngine = useMemo(() => report?.fraud_detection_engine || null, [report]);
     const imageForgery = useMemo(() => report?.image_forgery_analysis || null, [report]);
+    const documentSimilarity = useMemo(() => report?.document_similarity_analysis || null, [report]);
 
     const scoreClass = useMemo(() => {
         if (!summary) return "";
@@ -406,6 +407,43 @@ function Report() {
                                         {(imageForgery?.suspected_regions || []).length ? imageForgery.suspected_regions.map((item, index) => <li key={`${item.label}-${index}`}>{item.label || `Region ${index + 1}`}</li>) : <li>No suspicious regions identified.</li>}
                                     </ul>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="card shadow-sm border-0 mt-4">
+                        <div className="card-body">
+                            <div className="d-flex justify-content-between align-items-center mb-3">
+                                <h5 className="card-title mb-0">Document Similarity</h5>
+                                <span className={`badge bg-${documentSimilarity?.duplicate ? "danger" : documentSimilarity?.similarity_score >= 80 ? "warning" : "success"}`}>
+                                    {documentSimilarity?.exact_match ? "Exact Duplicate" : documentSimilarity?.duplicate ? "Duplicate" : "Unique"}
+                                </span>
+                            </div>
+                            <div className="row align-items-center">
+                                <div className="col-md-4 text-center py-3">
+                                    <div className={`display-6 fw-bold ${documentSimilarity?.duplicate ? "text-danger" : documentSimilarity?.similarity_score >= 80 ? "text-warning" : "text-success"}`}>
+                                        {Math.round(documentSimilarity?.similarity_score || 0)}%
+                                    </div>
+                                    <div className="text-muted">Similarity</div>
+                                </div>
+                                <div className="col-md-8">
+                                    <div className="progress" style={{ height: "10px" }}>
+                                        <div className={`progress-bar ${documentSimilarity?.duplicate ? "bg-danger" : documentSimilarity?.similarity_score >= 80 ? "bg-warning" : "bg-success"}`} style={{ width: `${Math.min(100, documentSimilarity?.similarity_score || 0)}%` }} />
+                                    </div>
+                                    <div className="mt-2 text-muted">Confidence: {documentSimilarity?.confidence ?? "-"}</div>
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <div className="fw-semibold">Matched document</div>
+                                <div>{documentSimilarity?.matched_filename || "No matching document found"}</div>
+                            </div>
+                            <div className="mt-3">
+                                <div className="fw-semibold">Reason</div>
+                                <div>{documentSimilarity?.explanation || "No explanation available."}</div>
+                            </div>
+                            <div className="mt-3">
+                                <div className="fw-semibold">Matching sections</div>
+                                <div>{(documentSimilarity?.matching_sections || []).join(", ") || "None"}</div>
                             </div>
                         </div>
                     </div>
